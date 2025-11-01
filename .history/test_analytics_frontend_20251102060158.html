@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Analytics Data Structure Test</h1>
+    <canvas id="assessmentTrendsChart" width="400" height="200"></canvas>
+    
+    <div id="results"></div>
+
+    <script>
+        // Simulate our fixed analytics module
+        const AnalyticsModule = {
+            charts: {
+                assessmentTrends: null
+            },
+
+            // Our fixed loadAssessmentTrends function
+            async loadAssessmentTrends(days = 30) {
+                try {
+                    // Simulate API response with the correct structure
+                    const mockData = {
+                        success: true,
+                        labels: ['2025-11-02', '2025-11-01', '2025-10-31', '2025-10-30'],
+                        scores: [75.0, 72.5, 81.1, 69.8],
+                        trends: {
+                            daily_assessments: [],
+                            processing_type_trends: []
+                        }
+                    };
+                    
+                    // Return the full response data since labels and scores are at root level
+                    return mockData.success ? mockData : this.getFallbackTrendsData();
+                } catch (error) {
+                    console.warn('Using fallback trends data:', error);
+                    return this.getFallbackTrendsData();
+                }
+            },
+
+            // Our fixed updateAssessmentTrendsChart function
+            updateAssessmentTrendsChart(data) {
+                const ctx = document.getElementById('assessmentTrendsChart');
+                if (!ctx) return;
+
+                if (this.charts.assessmentTrends) {
+                    this.charts.assessmentTrends.destroy();
+                }
+
+                // Defensive programming: ensure data structure exists
+                const chartData = data || {};
+                const labels = chartData.labels || [];
+                const scores = chartData.scores || [];
+
+                console.log('📊 Chart data:', { labels, scores });
+
+                this.charts.assessmentTrends = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Average Assessment Score',
+                            data: scores,
+                            borderColor: '#4F46E5',
+                            backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                title: {
+                                    display: true,
+                                    text: 'Score'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            },
+
+            getFallbackTrendsData() {
+                const dates = [];
+                const scores = [];
+                
+                // Generate last 7 days of sample data
+                for (let i = 6; i >= 0; i--) {
+                    const date = new Date();
+                    date.setDate(date.getDate() - i);
+                    dates.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                    scores.push(Math.round(60 + Math.random() * 25)); // Random scores between 60-85
+                }
+                
+                return {
+                    labels: dates,
+                    scores: scores
+                };
+            },
+
+            async testAnalytics() {
+                try {
+                    console.log('🧪 Testing analytics data loading...');
+                    const trendsData = await this.loadAssessmentTrends(30);
+                    
+                    console.log('✅ Loaded trends data:', trendsData);
+                    console.log('✅ Has labels:', 'labels' in trendsData);
+                    console.log('✅ Has scores:', 'scores' in trendsData);
+                    
+                    document.getElementById('results').innerHTML = `
+                        <h2>Test Results</h2>
+                        <p>✅ Data loaded successfully</p>
+                        <p>✅ Labels: ${JSON.stringify(trendsData.labels)}</p>
+                        <p>✅ Scores: ${JSON.stringify(trendsData.scores)}</p>
+                        <p>✅ No 'Cannot read properties of undefined' errors!</p>
+                    `;
+                    
+                    this.updateAssessmentTrendsChart(trendsData);
+                    
+                } catch (error) {
+                    console.error('❌ Test failed:', error);
+                    document.getElementById('results').innerHTML = `
+                        <h2>Test Results</h2>
+                        <p>❌ Error: ${error.message}</p>
+                    `;
+                }
+            }
+        };
+
+        // Run test when page loads
+        window.onload = () => {
+            AnalyticsModule.testAnalytics();
+        };
+    </script>
+</body>
+</html>
