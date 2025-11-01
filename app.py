@@ -6696,19 +6696,24 @@ def create_app():
     app_instance = PDSAssessmentApp()
     return app_instance.app
 
+# ✅ Create app at module level for Gunicorn
+app = create_app()
+
 if __name__ == '__main__':
     try:
         logger.info("Starting PDS Assessment Application...")
-        
+
         # Initialize database
         jobs = db_manager.get_all_jobs()
         categories = db_manager.get_all_job_categories()
         logger.info(f"Database initialized with {len(jobs)} jobs and {len(categories)} categories")
-        
-        app = create_app()
+
         logger.info("Flask app created successfully")
-        logger.info("Starting server on http://localhost:5000")
-        app.run(debug=False, host='127.0.0.1', port=5000)
+
+        port = int(os.environ.get("PORT", 5000))
+        logger.info(f"Starting server on http://0.0.0.0:{port}")
+        app.run(debug=False, host='0.0.0.0', port=port)
+
     except Exception as e:
         logger.error(f"Failed to start application: {e}")
         raise
